@@ -4,6 +4,8 @@ info:
   description: API for GridSync Intelligent EV Charging & Depot Management Engine
   version: 1.0.0
 servers:
+  - url: /api
+    description: Current server (works locally and on Vercel)
   - url: http://localhost:3000/api
     description: Local development server
 paths:
