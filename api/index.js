@@ -31,10 +31,15 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables');
-  process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// If env vars are missing, all routes will return 503 gracefully instead of crashing
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+app.use('/api', (req, res, next) => {
+  if (!supabase) return res.status(503).json({ error: 'Server misconfigured: missing Supabase credentials.' });
+  next();
+});
 
 // Swagger API Documentation
 const swaggerDocument = YAML.load(path.join(__dirname, '..', 'swagger.yaml'));
