@@ -1,0 +1,235 @@
+openapi: 3.0.0
+info:
+  title: GridSync API
+  description: API for GridSync Intelligent EV Charging & Depot Management Engine
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+paths:
+  /substations:
+    get:
+      summary: Get all substations
+      responses:
+        '200':
+          description: A list of substations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Substation'
+  /stations:
+    get:
+      summary: Get all charging stations
+      responses:
+        '200':
+          description: A list of charging stations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChargingStation'
+  /stations/{id}/bays:
+    get:
+      summary: Get charger bays for a specific station
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Station ID
+      responses:
+        '200':
+          description: A list of charger bays
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChargerBay'
+  /vehicles:
+    get:
+      summary: Get user's vehicles
+      responses:
+        '200':
+          description: A list of vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+  /reservations:
+    post:
+      summary: Create a new reservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReservation'
+      responses:
+        '201':
+          description: Reservation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '400':
+          description: Validation error or double booking
+    get:
+      summary: Get user's reservations
+      responses:
+        '200':
+          description: A list of reservations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+  /missions:
+    get:
+      summary: Get active fleet missions
+      responses:
+        '200':
+          description: Active fleet missions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FleetMission'
+    post:
+      summary: Schedule a new fleet mission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMission'
+      responses:
+        '201':
+          description: Mission created successfully
+
+components:
+  schemas:
+    Substation:
+      type: object
+      properties:
+        substation_id:
+          type: integer
+        name:
+          type: string
+        max_capacity_kw:
+          type: number
+        current_load_kw:
+          type: number
+    ChargingStation:
+      type: object
+      properties:
+        station_id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        total_bays:
+          type: integer
+    ChargerBay:
+      type: object
+      properties:
+        bay_id:
+          type: integer
+        bay_label:
+          type: string
+        plug_type:
+          type: string
+        max_kw:
+          type: number
+        is_operational:
+          type: boolean
+    Vehicle:
+      type: object
+      properties:
+        vehicle_id:
+          type: integer
+        vin:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        battery_capacity_kwh:
+          type: number
+        current_soc_pct:
+          type: number
+    CreateReservation:
+      type: object
+      required: [user_id, vehicle_id, bay_id, start_time, end_time]
+      properties:
+        user_id:
+          type: integer
+        vehicle_id:
+          type: integer
+        bay_id:
+          type: integer
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+    Reservation:
+      type: object
+      properties:
+        reservation_id:
+          type: integer
+        user_id:
+          type: integer
+        vehicle_id:
+          type: integer
+        bay_id:
+          type: integer
+        time_slot:
+          type: string
+        status:
+          type: string
+    CreateMission:
+      type: object
+      required: [vehicle_id, fleet_org_id, departure_time, target_soc_pct]
+      properties:
+        vehicle_id:
+          type: integer
+        fleet_org_id:
+          type: integer
+        mission_label:
+          type: string
+        departure_time:
+          type: string
+          format: date-time
+        target_soc_pct:
+          type: number
+        priority_level:
+          type: integer
+    FleetMission:
+      type: object
+      properties:
+        mission_id:
+          type: integer
+        mission_label:
+          type: string
+        departure_time:
+          type: string
+          format: date-time
+        target_soc_pct:
+          type: number
+        status:
+          type: string
