@@ -43,6 +43,12 @@ The original SQL does not seed tariffs, sessions, invoices or payments, and it p
 
 The demo is fully editable: add/edit/archive vehicles, reserve/cancel bays, request charging, update your profile, and view/pay invoices. Admins can manage stations/connectors/substations/tariffs, start sessions, record simulated readings, complete/fail charging, issue the resulting invoices, schedule missions and simulate payment refunds. Ownership and role checks apply inside the demo adapter; customers see their own records and admins see the demo installation.
 
+### Simulated checkout window
+
+An unpaid invoice's payment button opens a fake checkout with **UPI**, **Card** and **Banking** tabs, the exact saved invoice amount, fixed dummy details, a processing animation and a result screen. It collects no card number, CVV, UPI credential or bank login. Choose a test outcome: success, decline or interruption. Success/decline update the existing test transaction; interruption leaves it pending so it can be resumed. A decline can be retried as a new attempt. Browser-demo payment history also records the selected simulated method. Connected test payments retain their backend `test` method; the method screens are illustrative.
+
+The checkout is labelled simulated throughout. Closing it before submitting leaves the attempt pending; closing it while processing does not reverse a submitted outcome—check transaction history afterward. No gateway, bank or UPI application is contacted.
+
 To try the full cycle, register a demo customer, add a compatible vehicle and request a simulated session. Sign out, use the admin demo account to start/meter/complete that request, then sign back in as the customer to simulate payment and download the demo invoice. The invoice uses the saved demo session and pricing data and is clearly marked **DEMO / SIMULATED**. All demo amounts and energy are simulated.
 
 Changes are saved in **localStorage in this browser**, shared across demo accounts/tabs on the same site. The signed-in demo account is stored per tab. Reloading or signing out preserves saved demo records. Passwords for registered demo customers are stored as salted PBKDF2 hashes; this remains a client-side sandbox, not a production security boundary. Browser storage must be available; use HTTPS or localhost for Web Crypto support. Do not enter real personal/payment data or reuse real passwords. **Reset demo data** clears the demo records and registered demo accounts, then restores the original samples on the next login.

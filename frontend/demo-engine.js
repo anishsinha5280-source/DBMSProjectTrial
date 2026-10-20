@@ -99,6 +99,7 @@ window.createGridSyncDemo=(seed)=>{
   }
   else if(type==='missions'){mgr(user);const v=row(db,'vehicles',p.vehicle_id);if(!v?.org_id||v.org_id!==Number(p.fleet_org_id)||v.archived_at)fail('Choose a vehicle belonging to this fleet organization.');if(Date.parse(p.departure_time)<=Date.now())fail('Choose a future departure.');result={...p,mission_id:next(db,type),vehicle_id:v.vehicle_id,fleet_org_id:v.org_id,target_soc_pct:number(p.target_soc_pct,'Charge target',1,100),priority_level:number(p.priority_level,'Priority',1),status:'scheduled',created_at:now()};db.missions.unshift(result);}
   else fail('Demo operation not found.',404);
+  if(type==='payments'&&action==='settle'&&p.test_method){if(!['upi','card','netbanking'].includes(p.test_method))fail('Invalid test payment method.');result.payment_method='test_'+p.test_method;}
   write(db);return clone(result);
  }
  const api={storageKey:dbKey,get active(){return Boolean(sessionStorage.getItem(sessionKey));},get enabled(){return this.active||sessionStorage.getItem(modeKey)==='demo';},credentials,
