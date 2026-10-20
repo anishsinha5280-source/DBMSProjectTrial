@@ -1,5 +1,7 @@
 # GridSync — A new kind of current
 
+> **Upgraded edition:** Read `UPGRADE-START-HERE.md` first. It supersedes the earlier setup below. Authentication now uses a frontend and API on one origin; use `npm start` and deploy one Vercel project with the included configuration. The original standalone/demo guide is retained below as historical documentation.
+
 A new responsive frontend with an original ivory, forest-green and electric-lime identity, a locally constructed 3D charging depot, pointer parallax, scroll-linked 3D movement, smooth anchor navigation, section reveals, and a motion-safe mode following your operating system preferences.
 
 ## Start in one command

@@ -6,6 +6,8 @@
 
 # GridSync — Intelligent EV Charging & Depot Management Engine
 
+> **Functional upgrade:** Start with [UPGRADE-START-HERE.md](UPGRADE-START-HERE.md) for the authenticated manager/customer dashboards, required Supabase migration, session and billing workflows, and current single-project Vercel setup. [docs/API.md](docs/API.md) documents the protected API. The original architecture overview below is retained as background; its older setup/public-API descriptions are superseded by the upgrade guide.
+
 > A database-driven orchestration engine that balances physical electrical grid capacity with the scheduling demands of commercial fleets and retail EV drivers — ensuring every delivery van hits its target state-of-charge before departure without tripping a single substation breaker.
 
 ---

@@ -1,237 +1,1311 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: GridSync API
-  description: API for GridSync Intelligent EV Charging & Depot Management Engine
-  version: 1.0.0
+  title: 'GridSync authenticated API'
+  version: 2.0.0
+  description: 'Supabase Auth and RLS. All mutations require JSON and X-GridSync-Request: 1. See docs/API.md for payloads. Payments are test-only; metering is simulated/manual.'
 servers:
-  - url: /api
-    description: Current server (works locally and on Vercel)
-  - url: http://localhost:3000/api
-    description: Local development server
+  -
+    url: /api
+security:
+  -
+    sessionCookie: []
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: gs_access
 paths:
+  /health:
+    get:
+      summary: 'Public configuration health'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      security: []
+  /auth/register:
+    post:
+      summary: 'Public: create customer'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+      security: []
+  /auth/login:
+    post:
+      summary: 'Public: login'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+      security: []
+  /auth/refresh:
+    post:
+      summary: 'Public: refresh cookies'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+      security: []
+  /auth/logout:
+    post:
+      summary: 'Public: clear session'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+      security: []
+  /me:
+    get:
+      summary: 'Read permitted me'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    patch:
+      summary: 'Update own name/phone'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  /vehicles:
+    get:
+      summary: 'Read permitted vehicles'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Create vehicles'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
   /substations:
     get:
-      summary: Get all substations
+      summary: 'Read permitted substations'
+      parameters: []
       responses:
         '200':
-          description: A list of substations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Substation'
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Create substations (manager only)'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
   /stations:
     get:
-      summary: Get all charging stations
+      summary: 'Read permitted stations'
+      parameters: []
       responses:
         '200':
-          description: A list of charging stations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ChargingStation'
-  /stations/{id}/bays:
-    get:
-      summary: Get charger bays for a specific station
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Create stations (manager only)'
       parameters:
-        - in: path
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  /bays:
+    get:
+      summary: 'Read permitted bays'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Create bays (manager only)'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  /tariffs:
+    get:
+      summary: 'Read permitted tariffs'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Create tariffs (manager only)'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  /reservations:
+    get:
+      summary: 'Read permitted reservations'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Create compatible reservation'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  /sessions:
+    get:
+      summary: 'Read permitted sessions'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Request session'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  /invoices:
+    get:
+      summary: 'Read permitted invoices'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+  /payments:
+    get:
+      summary: 'Read permitted payments'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+  /grid-load:
+    get:
+      summary: 'Read permitted grid-load'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+  /customers:
+    get:
+      summary: 'Manager only: read customers'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+  /missions:
+    get:
+      summary: 'Manager only: read missions'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+    post:
+      summary: 'Manager only: schedule fleet mission'
+      parameters:
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  /organizations:
+    get:
+      summary: 'Manager only: read organizations'
+      parameters: []
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+  '/vehicles/{id}':
+    patch:
+      summary: 'Update vehicles'
+      parameters:
+        -
           name: id
+          in: path
           required: true
           schema:
             type: integer
-          description: Station ID
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
       responses:
         '200':
-          description: A list of charger bays
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ChargerBay'
-  /vehicles:
-    get:
-      summary: Get user's vehicles
-      responses:
-        '200':
-          description: A list of vehicles
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Vehicle'
-  /reservations:
-    post:
-      summary: Create a new reservation
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateReservation'
-      responses:
-        '201':
-          description: Reservation created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Reservation'
+          description: 'Success; creates may return 201'
         '400':
-          description: Validation error or double booking
-    get:
-      summary: Get user's reservations
-      responses:
-        '200':
-          description: A list of reservations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Reservation'
-  /missions:
-    get:
-      summary: Get active fleet missions
-      responses:
-        '200':
-          description: Active fleet missions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FleetMission'
-    post:
-      summary: Schedule a new fleet mission
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateMission'
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+    delete:
+      summary: 'Archive owned vehicle'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
       responses:
-        '201':
-          description: Mission created successfully
-
-components:
-  schemas:
-    Substation:
-      type: object
-      properties:
-        substation_id:
-          type: integer
-        name:
-          type: string
-        max_capacity_kw:
-          type: number
-        current_load_kw:
-          type: number
-    ChargingStation:
-      type: object
-      properties:
-        station_id:
-          type: integer
-        name:
-          type: string
-        address:
-          type: string
-        latitude:
-          type: number
-        longitude:
-          type: number
-        total_bays:
-          type: integer
-    ChargerBay:
-      type: object
-      properties:
-        bay_id:
-          type: integer
-        bay_label:
-          type: string
-        plug_type:
-          type: string
-        max_kw:
-          type: number
-        is_operational:
-          type: boolean
-    Vehicle:
-      type: object
-      properties:
-        vehicle_id:
-          type: integer
-        vin:
-          type: string
-        make:
-          type: string
-        model:
-          type: string
-        battery_capacity_kwh:
-          type: number
-        current_soc_pct:
-          type: number
-    CreateReservation:
-      type: object
-      required: [user_id, vehicle_id, bay_id, start_time, end_time]
-      properties:
-        user_id:
-          type: integer
-        vehicle_id:
-          type: integer
-        bay_id:
-          type: integer
-        start_time:
-          type: string
-          format: date-time
-        end_time:
-          type: string
-          format: date-time
-    Reservation:
-      type: object
-      properties:
-        reservation_id:
-          type: integer
-        user_id:
-          type: integer
-        vehicle_id:
-          type: integer
-        bay_id:
-          type: integer
-        time_slot:
-          type: string
-        status:
-          type: string
-    CreateMission:
-      type: object
-      required: [vehicle_id, fleet_org_id, departure_time, target_soc_pct]
-      properties:
-        vehicle_id:
-          type: integer
-        fleet_org_id:
-          type: integer
-        mission_label:
-          type: string
-        departure_time:
-          type: string
-          format: date-time
-        target_soc_pct:
-          type: number
-        priority_level:
-          type: integer
-    FleetMission:
-      type: object
-      properties:
-        mission_id:
-          type: integer
-        mission_label:
-          type: string
-        departure_time:
-          type: string
-          format: date-time
-        target_soc_pct:
-          type: number
-        status:
-          type: string
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/substations/{id}':
+    patch:
+      summary: 'Update substations (manager only)'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/stations/{id}':
+    patch:
+      summary: 'Update stations (manager only)'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/bays/{id}':
+    patch:
+      summary: 'Update bays (manager only)'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/tariffs/{id}':
+    patch:
+      summary: 'Update tariffs (manager only)'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/stations/{id}/bays':
+    get:
+      summary: 'Station connectors'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+  '/reservations/{id}/cancel':
+    post:
+      summary: 'Cancel permitted reservation'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/sessions/{id}/start':
+    post:
+      summary: 'Manager only: start session'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/sessions/{id}/meter':
+    post:
+      summary: 'Manager only: meter session'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/sessions/{id}/complete':
+    post:
+      summary: 'Manager only: complete session'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/sessions/{id}/fail':
+    post:
+      summary: 'Manager only: fail session'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/sessions/{id}/cancel':
+    post:
+      summary: 'Owner/manager: cancel session'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/invoices/{id}/pdf':
+    get:
+      summary: 'Generate authorized invoice PDF'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+  '/invoices/{id}/pay':
+    post:
+      summary: 'Start/resume test payment'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/payments/{id}/settle':
+    post:
+      summary: 'Simulate test outcome'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
+  '/payments/{id}/refund':
+    post:
+      summary: 'Manager only: simulate refund'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          description: 'Success; creates may return 201'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Sign in or refresh required'
+        '403':
+          description: 'Authorization denied'
+        '409':
+          description: Conflict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              payload:
+                value: {}
+                description: 'See docs/API.md and server/validation.js for required fields.'
