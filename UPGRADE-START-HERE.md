@@ -24,9 +24,24 @@ The migration adds fields, policies, RPCs and auth mappings without deleting leg
 
 ## Authentication and manager accounts
 
-### Dummy access without setup
+### Editable demo with normal login and registration
 
-The login page has **Try admin demo** and **Try customer demo** buttons. These open labelled, read-only sample dashboards without Supabase credentials or a password. The admin demo uses the manager dashboard; the customer demo shows personal records only. Details and navigation work; changes and real invoice downloads require a real authenticated account. **Exit demo** clears the per-tab demo selection. The sample account emails are illustrative and are not valid production credentials. These browser-only options never authenticate with or grant access to the backend. Real APIs still require Supabase authentication and enforce the existing role/ownership rules.
+Choose **Admin demo login** or **Customer demo login** on the login page. This selects demo mode and fills the ordinary email/password form; press **Sign in to demo workspace** to authenticate the demo account. No Supabase setup is required for demo mode.
+
+| Demo account | Email | Password |
+| --- | --- | --- |
+| Admin / manager | `admin@demo.gridsync.test` | `DemoAdmin123!` |
+| Customer | `customer@demo.gridsync.test` | `DemoCustomer123!` |
+
+These credentials work only in the browser-local demo. They are not production accounts and are not accepted by the real backend. In demo mode, **Create account** registers a new demo customer using the form. Use a dummy password. After registering, sign in using the credentials you chose. Demo registration sends no email and cannot create an admin role.
+
+The demo is fully editable: add/edit/archive vehicles, reserve/cancel bays, request charging, update your profile, and view/pay invoices. Admins can manage stations/connectors/substations/tariffs, start sessions, record simulated readings, complete/fail charging, issue the resulting invoices, schedule missions and simulate payment refunds. Ownership and role checks apply inside the demo adapter; customers see their own records and admins see the demo installation.
+
+To try the full cycle, register a demo customer, add a compatible vehicle and request a simulated session. Sign out, use the admin demo account to start/meter/complete that request, then sign back in as the customer to simulate payment and download the demo invoice. The invoice uses the saved demo session and pricing data and is clearly marked **DEMO / SIMULATED**. All demo amounts and energy are simulated.
+
+Changes are saved in **localStorage in this browser**, shared across demo accounts/tabs on the same site. The signed-in demo account is stored per tab. Reloading or signing out preserves saved demo records. Passwords for registered demo customers are stored as salted PBKDF2 hashes; this remains a client-side sandbox, not a production security boundary. Browser storage must be available; use HTTPS or localhost for Web Crypto support. Do not enter real personal/payment data or reuse real passwords. **Reset demo data** clears the demo records and registered demo accounts, then restores the original samples on the next login.
+
+Choose **Use real account login** to return to Supabase authentication. No demo workflow calls the real API or grants real manager privileges. Real APIs continue enforcing Supabase authentication and database role/ownership rules. Demo PDFs are generated locally using the bundled PDF library; real invoice PDFs continue using the authorized backend workflow.
 
 In Supabase Authentication, enable email/password accounts. Set Site URL to your local or final deployed origin, and add `<origin>/login` to allowed redirect URLs. Configure confirmation email delivery for your project.
 
@@ -118,5 +133,7 @@ The project was not published to your Vercel account during this task. `npm run 
 Run `npm test`. Tests execute the original schema and upgrade in PGlite with real RLS/SQL functions, checking ownership, blocked role escalation/direct writes, connector compatibility, meter bounds, tariff snapshots, invoice arithmetic, idempotent payments/refunds and capacity release. Tests use PGlite's native `gen_random_uuid()` and skip loading `pgcrypto` in that test environment only.
 
 Chromium desktop/mobile integration checks passed for login, role redirects, cookie persistence, manager-route denial, vehicle creation, invoice PDF downloads, test payments, logout and responsive/reduced-motion rendering. They used mocked Supabase Auth and real PostgreSQL/RLS operations. The PDF was rendered and visually inspected. Actual Supabase Auth/email delivery and your Vercel deployment were not exercised because their account configuration/access was not supplied.
+
+The editable demo has separate automated tests for registration/password validation, customer ownership, blocked role escalation, charging calculations, payment retries/refunds and persisted changes. A no-Supabase browser test completed registration/login, vehicle creation/editing, session request, admin start/meter/complete, substation editing, customer payment and demo PDF download, reload persistence and mobile layout. It confirmed zero real API calls during those demo workflows.
 
 Main implementation files: `server/app.js`, `server/validation.js`, `server/invoice-pdf.js`, `sql/migrations/20261019_secure_workflows.sql`, `frontend/login.html`, `frontend/dashboard.html`, `frontend/workspace.js`, `frontend/workspace.css`, and `tests/workflows.test.cjs`.

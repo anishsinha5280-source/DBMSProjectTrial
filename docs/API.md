@@ -2,6 +2,8 @@
 
 Base path: `/api`, on the same origin as the frontend. Sign in using the application to receive HttpOnly cookies. No user ID or role supplied by a customer determines ownership or authorization. PostgreSQL RLS also protects direct authenticated Supabase reads; validated RPCs are the only client-accessible mutation path.
 
+The editable demo uses a separate browser-local adapter and dataset, not these real API endpoints. Its dummy login/registration and record changes never create Supabase sessions or access production records. See `UPGRADE-START-HERE.md` for dummy credentials and storage/reset behavior.
+
 All POST/PATCH/DELETE calls require `Content-Type: application/json` and `X-GridSync-Request: 1`. Use `{}` for actions without fields. IDs in URL paths must be positive integers. Dates use ISO 8601 with a timezone. Manager-only actions are checked both in Express and in SQL. Financial amounts are calculated by SQL, not accepted from the browser.
 
 ## Authentication
