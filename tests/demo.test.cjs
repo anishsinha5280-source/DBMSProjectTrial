@@ -2,14 +2,15 @@ const test=require('node:test'),assert=require('node:assert/strict'),vm=require(
 test('editable demo accounts, ownership, lifecycle, billing and persistence',async()=>{
  const local=new Map(),session=new Map();const storage=map=>({getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,String(v)),removeItem:k=>map.delete(k)});
  const context=vm.createContext({window:{},sessionStorage:storage(session),localStorage:storage(local),crypto:webcrypto,TextEncoder,structuredClone,URLSearchParams,location:{search:'',assign(){},replace(){}},document:{body:{dataset:{page:'login'}}},navigator:{},Blob,console});
- for(const file of ['demo-engine.js','demo.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../frontend',file),'utf8'),context);
+ for(const file of ['demo-engine.js','demo-seed.js','demo.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../frontend',file),'utf8'),context);
  const demo=context.window.GridSyncDemo,req=(r,m='GET',p)=>demo.request(r,m,p),login=async role=>{const c=demo.select(role);await req('/auth/login','POST',c);};
  await assert.rejects(req('/me'),/Sign in/);demo.select('manager');await assert.rejects(req('/auth/login','POST',{email:demo.credentials.manager.email,password:'wrong'}),/Invalid demo/);
- await login('customer');assert.equal((await req('/me')).role,'customer');assert.equal((await req('/vehicles')).length,1);
+ await login('manager');for(const [resource,count]of [['stations',4],['substations',3],['bays',12],['vehicles',10],['customers',13],['organizations',3],['missions',8],['reservations',7]])assert.equal((await req('/'+resource)).length,count,'full SQL example '+resource);
+ await login('customer');assert.equal((await req('/me')).role,'customer');assert.equal((await req('/vehicles')).length,2);
  await assert.rejects(req('/substations','POST',{}),/Admin demo access/);
  await assert.rejects(req('/vehicles/2','PATCH',{}),/not owned/);
  const vehicle=await req('/vehicles','POST',{license_plate:'KA-09-TEST-33',make:'Tata',model:'Test EV',connector_types:['CCS2'],max_charge_rate_kw:50,battery_capacity_kwh:60});
- await assert.rejects(req('/sessions','POST',{vehicle_id:vehicle.vehicle_id,bay_id:2,meter_source:'simulated'}),/does not support/);
+ await assert.rejects(req('/sessions','POST',{vehicle_id:vehicle.vehicle_id,bay_id:3,meter_source:'simulated'}),/does not support/);
  const s=await req('/sessions','POST',{vehicle_id:vehicle.vehicle_id,bay_id:1,meter_source:'simulated'});
  await assert.rejects(req('/sessions/'+s.session_id+'/start','POST',{initial_meter_kwh:0}),/Admin demo/);
  await login('manager');assert.equal((await req('/sessions/'+s.session_id+'/start','POST',{initial_meter_kwh:0})).allocated_kw,50);
@@ -24,5 +25,5 @@ test('editable demo accounts, ownership, lifecycle, billing and persistence',asy
  await req('/auth/logout','POST',{});demo.select('customer');await req('/auth/register','POST',{full_name:'New Demo',email:'new-demo@example.test',password:'A-Dummy-Password-123',role:'manager'});await req('/auth/login','POST',{email:'new-demo@example.test',password:'A-Dummy-Password-123'});assert.equal((await req('/me')).role,'customer');assert.equal((await req('/vehicles')).length,0);assert.equal((await req('/invoices')).length,0);
  const saved=await req('/vehicles','POST',{license_plate:'KA-09-NEW-33',make:'MG',model:'Demo',connector_types:['CCS2'],max_charge_rate_kw:60});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../frontend/demo.js'),'utf8'),context);assert.equal((await context.window.GridSyncDemo.request('/vehicles'))[0].vehicle_id,saved.vehicle_id,'saved changes survive reinitialization');
- assert.ok(!local.get('gridsync-interactive-demo-v1').includes('A-Dummy-Password-123'),'password is not stored in plaintext');
+ assert.ok(!local.get(demo.storageKey).includes('A-Dummy-Password-123'),'password is not stored in plaintext');
 });

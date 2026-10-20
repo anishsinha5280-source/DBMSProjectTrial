@@ -1,7 +1,7 @@
 'use strict';
 // Editable browser-local sandbox. No demo credential is accepted by the real API.
 window.createGridSyncDemo=(seed)=>{
- const dbKey='gridsync-interactive-demo-v1',sessionKey='gridsync-demo-user',modeKey='gridsync-login-mode';
+ const dbKey='gridsync-interactive-demo-v2',sessionKey='gridsync-demo-user-v2',modeKey='gridsync-login-mode';
  const query=new URLSearchParams(location.search).get('demo');
  sessionStorage.removeItem('gridsync-demo-role'); // Upgrade the former read-only preview.
  if(['manager','customer'].includes(query))sessionStorage.setItem(modeKey,'demo');
@@ -12,8 +12,11 @@ window.createGridSyncDemo=(seed)=>{
  async function digest(password,salt){const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:100000,hash:'SHA-256'},material,256);return Array.from(new Uint8Array(bits),n=>n.toString(16).padStart(2,'0')).join('');}
  async function read(){
   const saved=localStorage.getItem(dbKey);if(saved){try{return JSON.parse(saved);}catch{fail('Demo storage is damaged. Use Reset demo to restore sample data.');}}
-  const db=clone(seed);db.accounts=[];
-  for(const [role,user_id] of [['manager',900],['customer',1]]){const c=credentials[role],salt=uuid();db.accounts.push({user_id,email:c.email,salt,hash:await digest(c.password,salt)});db.customers.find(u=>u.user_id===user_id).email=c.email;}
+  const shift=Date.now()-Date.parse(seed.generated_at||now());
+  const rebase=value=>{if(Array.isArray(value))return value.map(rebase);if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,rebase(v)]));if(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(value)&&Number.isFinite(Date.parse(value)))return new Date(Date.parse(value)+shift).toISOString();if(typeof value==='string'&&value.startsWith('[')&&value.includes('T')&&value.endsWith(')'))return '['+value.slice(1,-1).split(',').map(v=>new Date(Date.parse(v)+shift).toISOString()).join(',')+')';return value;};
+  const db=rebase(clone(seed));db.accounts=[];
+  const ids=seed.demo_account_ids||{manager:900,customer:1};
+  for(const [role,user_id] of Object.entries(ids)){const c=credentials[role],salt=uuid();db.accounts.push({user_id,email:c.email,salt,hash:await digest(c.password,salt)});db.customers.find(u=>u.user_id===user_id).email=c.email;}
   write(db);return db;
  }
  function write(db){try{localStorage.setItem(dbKey,JSON.stringify(db));}catch{fail('Demo changes could not be saved. Allow browser storage or free space, then retry.');}}
@@ -98,7 +101,7 @@ window.createGridSyncDemo=(seed)=>{
   else fail('Demo operation not found.',404);
   write(db);return clone(result);
  }
- const api={get active(){return Boolean(sessionStorage.getItem(sessionKey));},get enabled(){return this.active||sessionStorage.getItem(modeKey)==='demo';},credentials,
+ const api={storageKey:dbKey,get active(){return Boolean(sessionStorage.getItem(sessionKey));},get enabled(){return this.active||sessionStorage.getItem(modeKey)==='demo';},credentials,
   select(role){sessionStorage.setItem(modeKey,'demo');sessionStorage.removeItem(sessionKey);return credentials[role];},
   useReal(){sessionStorage.removeItem(sessionKey);sessionStorage.removeItem(modeKey);},
   reset(){localStorage.removeItem(dbKey);sessionStorage.removeItem(sessionKey);location.assign('/login?demo=customer');},
