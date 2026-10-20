@@ -8,6 +8,7 @@ const localTime=ms=>{const d=new Date(Date.now()+ms);return new Date(d-d.getTime
 let me=null,store={},tab='overview',sessionFilter='all',vehicleFilter='all',register=false,refreshing=null,toastTimer;
 function toast(text){$('#toast').textContent=text;$('#toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),5000);}
 async function request(route,method='GET',body,canRefresh=true){
+ if(window.GridSyncDemo?.active)return window.GridSyncDemo.request(route,method,body);
  const opts={method,credentials:'same-origin',headers:method==='GET'?{}:{'Content-Type':'application/json','X-GridSync-Request':'1'},signal:AbortSignal.timeout(20000)};if(body!==undefined)opts.body=JSON.stringify(body);
  const response=await fetch('/api'+route,opts);
  if(response.status===401&&canRefresh&&!route.startsWith('/auth/')){
@@ -34,7 +35,7 @@ async function load(){
  const keys=['stations','bays','substations','vehicles','reservations','sessions','invoices','payments','tariffs','grid-load',...(manager()?['customers','missions','organizations']:[])];
  const values=await Promise.all(keys.map(k=>request('/'+k)));store={health:store.health,...Object.fromEntries(keys.map((k,i)=>[k,values[i]]))};render();$('#workspace-error').hidden=true;
  const capacity=store.bays.reduce((n,b)=>n+Number(b.max_kw_output),0);$('#scene-power').innerHTML=`${capacity.toLocaleString()} <small>kW installed</small>`;
- $('#art-mode').textContent='ILLUSTRATIVE DEPOT · ACCOUNT DATA';
+ $('#art-mode').textContent=window.GridSyncDemo?.active?'SAMPLE DATA · READ-ONLY DEMO':'ILLUSTRATIVE DEPOT · ACCOUNT DATA';
 }
 function totals(payments){const values={};for(const p of payments)values[p.currency]=(values[p.currency]||0)+Number(p.paid_amount);return Object.entries(values).map(([c,n])=>money(n,c)).join(' / ')||'No receipts';}
 function render(){
@@ -119,7 +120,7 @@ const actions={
  'station-details':id=>{const s=find('stations',id);showModal(s.station_name,`<p>${esc(s.street_address)}, ${esc(s.city)}</p><div class="notice">Operational means hardware is marked available. Booking availability is checked when you reserve.</div>`+store.bays.filter(b=>b.station_id===s.station_id).map(b=>`<div class="bay-row"><div>Bay ${b.bay_number}<small>${esc(b.plug_type)} · ${b.max_kw_output} kW</small></div>${pill(b.is_operational?'operational':'offline')}</div>`).join('')+`<div class="card-actions">${button('new-reservation','Reserve a compatible bay')}</div>`);},
  'mission-new':()=>openForm('Give your fleet a direction.',input('mission_label','Mission label','','text','required maxlength="150"',true)+select('vehicle_id','Fleet vehicle',store.vehicles.filter(v=>v.org_id&&!v.archived_at).map(v=>[v.vehicle_id,vehicleName(v)]))+select('fleet_org_id','Organization',store.organizations.map(o=>[o.org_id,o.company_name]))+input('departure_time','Departure',localTime(7200000),'datetime-local','required',true)+input('target_soc_pct','Target charge (%)',80,'number','required min="1" max="100"')+input('priority_level','Priority',1,'number','required min="1" step="1"'),'/missions','POST','The vehicle must already belong to the selected organization.',p=>({...p,departure_time:new Date(p.departure_time).toISOString()}))
 };
-document.addEventListener('click',async e=>{const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;render();return;}const b=e.target.closest('[data-action]');if(!b||!actions[b.dataset.action])return;b.disabled=true;try{await actions[b.dataset.action](b.dataset.id);}catch(error){toast(error.message);}finally{b.disabled=false;}});
+document.addEventListener('click',async e=>{const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;render();return;}const b=e.target.closest('[data-action]');if(!b||!actions[b.dataset.action])return;if(window.GridSyncDemo?.active&&!['station-details','session-details','invoice-details','payment-details','vehicle-history'].includes(b.dataset.action)){toast('Read-only demo: exit the demo and sign in to make changes or download real invoices.');return;}b.disabled=true;try{await actions[b.dataset.action](b.dataset.id);}catch(error){toast(error.message);}finally{b.disabled=false;}});
 function setupScene(){
  const objects=$('#scene-objects');if(!objects)return;
  objects.innerHTML=[0,1,2].map(n=>`<div class="charger" style="left:${95+n*100}px;top:65px"><div class="front">ϟ</div><div class="top"></div><div class="side"></div><div class="cable"></div></div><div class="car" style="left:${85+n*100}px;top:${n===1?140:125}px;--car:${['#d7eb83','#dce3dc','#8cae95'][n]}"><i></i></div>`).join('');
@@ -131,6 +132,7 @@ function setupScene(){
 async function boot(){
  setupScene();
  if(document.body.dataset.page==='login'){
+  const demos=document.createElement('div');demos.className='demo-access';demos.innerHTML='<div class="eyebrow">JUST LOOKING AROUND?</div><p class="form-note">Explore sample dashboards. No account or database setup needed.</p><div class="demo-options"><a class="button lime" href="/manager?demo=manager">Try admin demo ↗</a><a class="button demo-customer" href="/customer?demo=customer">Try customer demo ↗</a></div><p class="form-note">Read-only sample access. No access to real customer data.</p>';$('.auth-card').append(demos);
   $('#login-tab').onclick=()=>setRegister(false);$('#register-tab').onclick=()=>setRegister(true);
   $('#password-toggle').onclick=()=>{const input=$('[name=password]');input.type=input.type==='password'?'text':'password';$('#password-toggle').textContent=input.type==='password'?'Show':'Hide';$('#password-toggle').setAttribute('aria-label',input.type==='password'?'Show password':'Hide password');};
   $('#auth-form').onsubmit=async e=>{e.preventDefault();const submit=$('#auth-submit');submit.disabled=true;$('#auth-error').textContent='';try{const form=Object.fromEntries(new FormData(e.target));const result=await request(register?'/auth/register':'/auth/login','POST',form,false);if(!result.signed_in){$('#auth-error').textContent=result.message;setRegister(false);return;}const user=await request('/me');$('.auth-card').classList.add('login-progress');location.replace(user.role==='manager'?'/manager':'/customer');}catch(error){$('#auth-error').textContent=error.message;}finally{submit.disabled=false;}};
@@ -139,6 +141,7 @@ async function boot(){
   try{me=await request('/me');if(location.pathname!==(manager()?'/manager':'/customer')){location.replace(manager()?'/manager':'/customer');return;}
    $('#role-label').textContent=manager()?'MANAGER / CONNECTED OPERATIONS':'CUSTOMER / YOUR CONNECTED WORKSPACE';$('#welcome').textContent=`Welcome, ${me.full_name}. ${manager()?'Your entire charging ecosystem, in sync.':'A little less waiting. A lot more going.'}`;$('#logout').hidden=false;
    const health=await request('/health');await load();store.health=health;render();
+   if(window.GridSyncDemo?.active){$('#role-label').textContent=manager()?'ADMIN DEMO / MANAGER VIEW':'CUSTOMER DEMO / PERSONAL VIEW';$('#welcome').textContent='Explore a read-only sample workspace. All charging records and payments shown here are illustrative.';$('#logout').textContent='Exit demo ↗';const notice=document.createElement('div');notice.className='notice warning';notice.innerHTML='<strong>Read-only demo</strong> · All records are samples. Exit the demo to sign in and use your own account.';$('.workspace-body').prepend(notice);}
   }catch(error){$('#workspace-error').hidden=false;$('#workspace-error').textContent=error.message;}
   $('#reload').onclick=async()=>{const b=$('#reload');b.disabled=true;try{const health=store.health;await load();store.health=health;render();toast('Workspace refreshed.');}catch(error){$('#workspace-error').hidden=false;$('#workspace-error').textContent='Refresh failed. Previously loaded data may be stale. '+error.message;}finally{b.disabled=false;}};
  }

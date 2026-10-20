@@ -24,6 +24,10 @@ The migration adds fields, policies, RPCs and auth mappings without deleting leg
 
 ## Authentication and manager accounts
 
+### Dummy access without setup
+
+The login page has **Try admin demo** and **Try customer demo** buttons. These open labelled, read-only sample dashboards without Supabase credentials or a password. The admin demo uses the manager dashboard; the customer demo shows personal records only. Details and navigation work; changes and real invoice downloads require a real authenticated account. **Exit demo** clears the per-tab demo selection. The sample account emails are illustrative and are not valid production credentials. These browser-only options never authenticate with or grant access to the backend. Real APIs still require Supabase authentication and enforce the existing role/ownership rules.
+
 In Supabase Authentication, enable email/password accounts. Set Site URL to your local or final deployed origin, and add `<origin>/login` to allowed redirect URLs. Configure confirmation email delivery for your project.
 
 ```sh
