@@ -79,7 +79,7 @@ function createApp({ env = process.env, clientFactory = createClient } = {}) {
   const read = async (req, res, table, order) => { const query = req.db.from(table).select('*'); const result = await (order ? query.order(order, { ascending: false }) : query); if (result.error) return fail(res, result.error, 500); res.json(result.data); };
   const mutation = action => async (req, res) => {
     try { validateMutation(action, req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
-    if (action.startsWith('payment.') && env.ENABLE_TEST_PAYMENTS !== 'true') return res.status(409).json({ error: 'Payments are disabled. A production gateway is not configured; an administrator can enable test payments.' });
+    if ((action.startsWith('payment.') || ['reservation.create','reservation.checkout'].includes(action)) && env.ENABLE_TEST_PAYMENTS !== 'true') return res.status(409).json({ error: 'Test payments are disabled. Enable test payments to use simulated checkout; no production gateway is configured.' });
     const entity = req.params.id ? Number(req.params.id) : null;
     if (entity !== null && (!Number.isSafeInteger(entity) || entity < 1)) return res.status(400).json({ error: 'Invalid record ID.' });
     const { data, error } = await req.db.rpc('gs_mutate', { action, entity, payload: req.body });
@@ -94,6 +94,8 @@ function createApp({ env = process.env, clientFactory = createClient } = {}) {
   for (const [url, table] of [['customers','app_user'],['missions','fleet_mission'],['organizations','fleet_org']]) app.get(`/api/${url}`,manager,(req,res)=>read(req,res,table));
   app.post('/api/vehicles',mutation('vehicle.save'));app.patch('/api/vehicles/:id',mutation('vehicle.save'));app.delete('/api/vehicles/:id',mutation('vehicle.archive'));
   app.post('/api/reservations',mutation('reservation.create'));app.post('/api/reservations/:id/cancel',mutation('reservation.cancel'));
+  app.get('/api/reservation-checkouts',(req,res)=>read(req,res,'reservation_checkout','checkout_id'));
+  app.post('/api/reservation-checkouts/:id/settle',mutation('reservation.checkout'));
   app.post('/api/sessions',mutation('session.create'));app.post('/api/sessions/:id/cancel',mutation('session.cancel'));
   for (const op of ['start','meter','complete','fail']) app.post(`/api/sessions/:id/${op}`,manager,mutation(`session.${op}`));
   for (const [url,action] of [['substations','substation.save'],['stations','station.save'],['bays','bay.save'],['tariffs','tariff.save']]) { app.post(`/api/${url}`,manager,mutation(action));app.patch(`/api/${url}/:id`,manager,mutation(action)); }

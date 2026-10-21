@@ -19,6 +19,7 @@ Back up an existing database, then use the Supabase SQL Editor as an administrat
 1. For a **new empty project**, run `sql/supabase_schema.sql` once. It creates PostgreSQL tables and illustrative legacy seed records. Do not run the SQL Server/T-SQL scripts against Supabase.
 2. For a project that **already has that PostgreSQL schema**, skip the base script and retain its data.
 3. In either case, run `sql/migrations/20261019_secure_workflows.sql` **once**, in full. It is transactional and records its version in `gs_migration`. A second run intentionally fails.
+4. Then run `sql/migrations/20261020_reservation_checkout.sql` **once**. If you already applied the first upgrade, apply only this new migration. It adds reservation payment authorization and prevents a reservation from being created before a successful simulated payment. Deploy the new code and this migration together. Browser-local demos apply the new flow automatically and require no SQL setup.
 
 The migration adds fields, policies, RPCs and auth mappings without deleting legacy records. It removes anonymous table access and client grants on legacy operational views. If duplicate historical invoices, payment references, active bays/vehicles or registrations prevent unique indexes from being created, the migration rolls back. Reconcile those specific records before retrying; no automatic deletion/merge is performed.
 
@@ -89,7 +90,7 @@ Customers add registration, make, model and verified connector support. Battery 
 
 ## Charging lifecycle
 
-1. Customers reserve a compatible connector or request a walk-in/scheduled session. Reservations check bay and vehicle overlaps and last at most 24 hours.
+1. Customers choose a compatible connector and reservation interval. Submitting opens the fake payment window and creates only a pending checkout. A successful simulated payment then atomically creates the confirmed reservation. Failed, closed, expired or interrupted checkouts create no reservation. Checkout requests expire after 15 minutes and do not hold the bay; availability is checked again on success. Reservations last at most 24 hours. Walk-in/scheduled session requests remain a separate flow.
 2. Managers start due queued/scheduled requests with an initial meter reading. Reservation-backed sessions must start inside the confirmed reservation window.
 3. The database allocates the minimum of connector power, vehicle power and remaining substation capacity within the configured limit. A session stays queued when capacity is insufficient. Only one active session per bay/vehicle is allowed.
 4. Managers record cumulative meter readings. Sources are **simulated** or **manual**, neither verified charger telemetry. Readings are monotonic and cannot imply energy above allocated power over the recorded duration or known battery capacity.
@@ -100,6 +101,14 @@ For a quick test, choose simulated metering, start at `100 kWh`, and record `110
 Manual sessions use wall-clock duration. Simulation time is cumulative, monotonic and capped at seven days. Idle duration cannot exceed total duration or leave insufficient charging time for the recorded energy. Grid load is baseline plus active allocated power, with simulated-session counts shown. Refresh retrieves new data on demand; it is not live grid monitoring.
 
 No OCPP/hardware command integration, automatic queue worker or continuous redistribution is claimed. Managers control the application lifecycle. Capacity limits affect newly started sessions; active allocations remain until completion/failure. Critical operations use a transaction advisory lock, intentionally serializing changes for this small project rather than claiming a high-throughput distributed scheduler.
+
+### Fake payment before reservation confirmation
+
+The reservation form's **Continue to fake payment** button opens the existing UPI/card/banking simulator. Until that simulator succeeds, the booking is shown only under **Reservation payments** as pending/unconfirmed. It can be resumed after reload, or retried after a decline/expiry. The checkout reference and its eventual reservation ID remain linked. Duplicate submission/callback keys cannot create duplicate reservations. Another customer's booking taking the slot causes confirmation to fail before authorization is recorded.
+
+The displayed amount is a **simulated estimated authorization**, calculated from requested duration, vehicle/connector power, known battery capacity and the applicable tariff, including configured service fee, discount and tax. No amount is actually charged, captured or credited. The final session invoice still uses actual recorded energy; this is not an advance payment to deduct from it. Existing seeded bookings are retained as historical examples without retroactively requiring a checkout.
+
+For connected accounts, set `ENABLE_TEST_PAYMENTS=true` and enable `gs_settings.test_payments_enabled` as described below before making simulated reservations. No production payment gateway is configured. The database, not just the UI, gates new reservation creation behind successful test authorization.
 
 ## Invoices and test payments
 

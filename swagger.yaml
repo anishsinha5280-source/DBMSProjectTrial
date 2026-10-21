@@ -466,7 +466,7 @@ paths:
         '409':
           description: Conflict
     post:
-      summary: 'Create compatible reservation'
+      summary: 'Prepare simulated reservation checkout; no reservation until successful payment'
       parameters:
         -
           name: X-GridSync-Request
@@ -1309,3 +1309,55 @@ paths:
               payload:
                 value: {}
                 description: 'See docs/API.md and server/validation.js for required fields.'
+  /reservation-checkouts:
+    get:
+      summary: 'List owned reservation checkout requests (all for managers)'
+      responses:
+        '200':
+          description: 'Checkout list'
+  '/reservation-checkouts/{id}/settle':
+    post:
+      summary: 'Simulate reservation payment; success atomically confirms the booking'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: X-GridSync-Request
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - '1'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - outcome
+              properties:
+                outcome:
+                  type: string
+                  enum:
+                    - paid
+                    - failed
+                test_method:
+                  type: string
+                  enum:
+                    - upi
+                    - card
+                    - netbanking
+      responses:
+        '200':
+          description: 'Reservation authorization or declined checkout'
+        '400':
+          description: 'Expired, unavailable or invalid checkout'
+        '403':
+          description: 'Not owned by this account'

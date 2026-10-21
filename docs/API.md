@@ -48,7 +48,9 @@ DELETE `/vehicles/:id` with `{}` archives it. Edits/removal are blocked by relev
 
 ## Reservations
 
-POST `/reservations`: `vehicle_id`, `bay_id`, `start_time`, `end_time`. Ownership comes from the selected authorized vehicle. Times must be future, ordered and no more than 24 hours apart. Bay and vehicle overlaps and connector compatibility are checked inside the transaction.
+POST `/reservations`: `vehicle_id`, `bay_id`, `start_time`, `end_time`, `idempotency_key` (UUID). This now returns a **pending reservation checkout**, not a confirmed reservation. Ownership comes from the selected authorized vehicle. Times must be future, ordered and no more than 24 hours apart. Bay/vehicle overlaps, connector compatibility and an applicable tariff are validated before producing an estimated simulated authorization. Test payments must be enabled.
+
+GET `/reservation-checkouts` lists owned checkout requests (all for managers). POST `/reservation-checkouts/:id/settle` accepts `outcome` (`paid` or `failed`) and optional `test_method` (`upi`, `card`, `netbanking`). A successful outcome revalidates availability and atomically creates exactly one reservation, returning `status: authorized` and its `reservation_id`. Failures create no reservation. Checkouts expire after 15 minutes; no slot is held until success. Interrupted checkout UI does not send settlement and keeps the attempt pending. Amounts are simulated authorizations, not charges/prepayment credits against session invoices. The old core reservation mutation is no longer executable by authenticated clients; the public mutation wrapper enforces this flow.
 
 POST `/reservations/:id/cancel`: `{}`. Requires ownership or manager access. Cancels associated queued/scheduled sessions, but refuses an active session.
 
